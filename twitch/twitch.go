@@ -31,11 +31,11 @@ func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
 	}
 }
 
-func (c *Client) sendRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
+func (c *Client) createRequest(method string, path string, params map[string]string) *http.Request {
 
 	// Create new http request and set it all up!
 	url := fmt.Sprintf("%s%s", c.apiURL, path)
-	req, err := http.NewRequest(method, url, nil)
+	req, _ := http.NewRequest(method, url, nil)
 
 	// Set the user-agent
 	req.Header.Add("User-Agent", "Twitchy Gopher (https://github.com/ollieparsley/twitchy-gopher")
@@ -52,8 +52,16 @@ func (c *Client) sendRequest(method string, path string, params map[string]strin
 		req.URL.Query().Add(key, val)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	return req
+}
 
+func (c *Client) sendRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
+
+	// Create the request
+	req := c.createRequest(method, path, params)
+
+	// Make the request
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return errorToOutput(err)
 	}

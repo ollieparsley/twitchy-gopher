@@ -50,6 +50,34 @@ func TestErrorToOutput(t *testing.T) {
 	}
 }
 
+func TestCreateRequest(t *testing.T) {
+	client := NewClient(&OAuthConfig{
+		ClientID:    "client-id",
+		AccessToken: "access-token",
+	}, &http.Client{})
+
+	req := client.createRequest("GET", "foo/bar", nil)
+
+	if req.URL.Scheme != "https" {
+		t.Errorf("createRequest scheme was not https: %s", req.URL.Scheme)
+	}
+	if req.URL.Host != "api.twitch.tv" {
+		t.Errorf("createRequest scheme was not api.twitch.tv: %s", req.URL.Host)
+	}
+	if req.URL.Path != "/kraken/foo/bar" {
+		t.Errorf("createRequest scheme was not /kraken/foo/bar: %s", req.URL.Path)
+	}
+	if req.Header.Get("Authorization") != "OAuth access-token" {
+		t.Errorf("createRequest Authorization header was not was not \"OAuth access-token\": %s", req.Header.Get("Authorization"))
+	}
+	if req.Header.Get("Client-ID") != "client-id" {
+		t.Errorf("createRequest Authorization header was not was not \"client-id\": %s", req.Header.Get("Client-ID"))
+	}
+	if req.Header.Get("Accept") != "application/vnd.twitchtv.v5+json" {
+		t.Errorf("createRequest Accept header was not was not \"application/vnd.twitchtv.v5+json\": %s", req.Header.Get("Accept"))
+	}
+}
+
 func TestGetRoot(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
