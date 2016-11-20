@@ -10,9 +10,10 @@ deps:
 	GOPATH=$(GOPATH) go get -v ./...
 	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/assert
 	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/mock
+	GOPATH=$(GOPATH) go get -v github.com/jarcoal/httpmock
 
 test: deps
-	GOPATH=$(GOPATH) go test ./twitch
+	GOPATH=$(GOPATH) go test -v ./twitch
 
 docs:
 	@echo "Generate documentation docs"
