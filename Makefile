@@ -1,4 +1,4 @@
-GOPATH=$(shell readlink -f $(shell pwd)/../../../../)
+GOPATH ?= $(shell readlink -f $(shell pwd)/../../../../)
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
