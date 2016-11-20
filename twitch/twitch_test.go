@@ -112,10 +112,7 @@ func TestGetBlocks(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://api.twitch.tv/kraken/users/1/blocks",
 		httpmock.NewStringResponder(200, `{"blocks":[{"updated_at":"2013-02-07T01:04:43Z","user":{"updated_at":"2013-02-06T22:44:19Z","display_name":"test_user_troll","type":"user","bio":"I'm a troll.. Kappa","name":"test_user_troll","_id":13460644,"logo":"http://something.net/foo.png","created_at":"2010-06-30T08:26:49Z"},"_id":970887}]}`))
 
-	client := NewClient(&OAuthConfig{
-		ClientID:    "pzqv1a6n4r1l7wzto3mor00bzkpmw8c",
-		AccessToken: "xte5p3cozk1tbv2gbmnalobl9z77vu",
-	}, &http.Client{})
+	client := NewClient(&OAuthConfig{}, &http.Client{})
 
 	output, errorOutput := client.GetBlocks(&BlocksInput{
 		UserID: 1,
@@ -150,5 +147,43 @@ func TestGetBlocks(t *testing.T) {
 	}
 	if block.User.Logo != "http://something.net/foo.png" {
 		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %d", block.User.Logo)
+	}
+}
+
+func TestBlockUser(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("PUT", "https://api.twitch.tv/kraken/users/1/blocks/2",
+		httpmock.NewStringResponder(200, `{"updated_at":"2013-02-07T01:04:43Z","user":{"updated_at":"2013-01-18T22:33:55Z","logo":"http://something.net/foo.png","type":"user","bio":"I'm a troll.. Kappa","display_name":"test_user_troll","name":"test_user_troll","_id":22125774,"created_at":"2011-05-01T14:50:12Z"},"_id":287813}`))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	output, errorOutput := client.BlockUser(&BlockUserInput{
+		UserID:       1,
+		TargetUserID: 2,
+	})
+
+	if errorOutput != nil {
+		t.Errorf("GetBlocks errorOutput should have been nil: %+v", errorOutput)
+	}
+
+	if output.ID != 287813 {
+		t.Errorf("GetBlocks the block id was not 287813: %d", output.ID)
+	}
+	if output.User.ID != 22125774 {
+		t.Errorf("GetBlocks the block user id was not 22125774: %d", output.User.ID)
+	}
+	if output.User.DisplayName != "test_user_troll" {
+		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %d", output.User.DisplayName)
+	}
+	if output.User.Type != "user" {
+		t.Errorf("GetBlocks the block user type was not user: %d", output.User.Type)
+	}
+	if output.User.Bio != "I'm a troll.. Kappa" {
+		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %d", output.User.Bio)
+	}
+	if output.User.Logo != "http://something.net/foo.png" {
+		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %d", output.User.Logo)
 	}
 }

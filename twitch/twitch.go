@@ -100,3 +100,10 @@ func (c *Client) GetBlocks(input *BlocksInput) (*BlocksOutput, *ErrorOutput) {
 	errorOutput := c.sendRequest("GET", fmt.Sprintf("users/%d/blocks", input.UserID), params, output)
 	return output, errorOutput
 }
+
+// BlockUser - Block a user (target) on behalf of another user
+func (c *Client) BlockUser(input *BlockUserInput) (*BlockOutput, *ErrorOutput) {
+	output := new(BlockOutput)
+	errorOutput := c.sendRequest("PUT", fmt.Sprintf("users/%d/blocks/%d", input.UserID, input.TargetUserID), nil, output)
+	return output, errorOutput
+}

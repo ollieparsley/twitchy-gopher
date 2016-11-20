@@ -37,9 +37,9 @@ type RootTokenAuthorization struct {
 // Blocks
 //
 type BlocksOutput struct {
-	Blocks []BlocksBlock
+	Blocks []BlockOutput
 }
-type BlocksBlock struct {
+type BlockOutput struct {
 	UpdatedAt time.Time       `json:"updated_at"`
 	ID        int64           `json:"_id"`
 	User      BlocksBlockUser `json:"user"`
@@ -58,4 +58,8 @@ type BlocksInput struct {
 	UserID int64 // The user ID for user whos block list you want to return
 	Limit  int   // Maximum number of objects in array. Default is 25. Maximum is 100.
 	Offset int   // Object offset for pagination. Default is 0.
+}
+type BlockUserInput struct {
+	UserID       int64
+	TargetUserID int64
 }
