@@ -22,21 +22,19 @@ import (
 )
 
 func main() {
-	// Create a new session
-    sess, err := twitch.NewSession()
-    if err != nil {
-        panic(err)
-    }
-
-    // Create new client from the session
-    t := sess.NewClient()
+	// Create new client
+    t := twitch.NewClient(&twitch.OAuthConfig{
+      ClientID: 'my-client-id',
+      ClientSecret: 'my-client-secret',
+      AccessToken: 'my-users-access-token',
+      AccessTokenSecret: 'my-users-access-token-secret',
+    })
 
     // Make requests like this
-    videoResp, videoErr := t.GetVideos(&t.GetVideosInput{})
+    videoResp, videoErr := t.GetVideos(&twitch.GetVideosInput{})
     if videoErr != nil {
         panic(videoErr)
     }
-
 }
 ```
 

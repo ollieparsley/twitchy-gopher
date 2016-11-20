@@ -7,14 +7,12 @@ help:
 	@echo "  deps                    to go get the dependencies"
 
 deps:
-	GOPATH=$(GOPATH) go get -v -u ./...
-	GOPATH=$(GOPATH) go get -v -u github.com/golang/lint/golint
-	GOPATH=$(GOPATH) go get -v -u github.com/jstemmer/go-junit-report
-	GOPATH=$(GOPATH) go get -v -u github.com/stretchr/testify/assert
-	GOPATH=$(GOPATH) go get -v -u github.com/stretchr/testify/mock
+	GOPATH=$(GOPATH) go get -v ./...
+	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/assert
+	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/mock
 
 test: deps
-	GOPATH=$(GOPATH) go test
+	GOPATH=$(GOPATH) go test ./twitch
 
 docs:
 	@echo "Generate documentation docs"
