@@ -1,10 +1,10 @@
 package twitch
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/dghubble/sling"
+	"strconv"
 )
 
 type OAuthConfig struct {
@@ -21,7 +21,7 @@ type Client struct {
 }
 
 func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
-	apiURL := "https://api.twitch.tv/kracken/"
+	apiURL := "https://api.twitch.tv/kraken/"
 
 	return &Client{
 		apiURL:      apiURL,
@@ -31,18 +31,72 @@ func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
 	}
 }
 
-func (c *Client) getSling() *sling.Sling {
+func (c *Client) sendRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
 
-	s := sling.New().Base(c.apiURL).Client(c.httpClient)
+	// Create new http request and set it all up!
+	url := fmt.Sprintf("%s%s", c.apiURL, path)
+	req, err := http.NewRequest(method, url, nil)
 
-	// User-agent so twitch can track where this has come from
-	s.Set("User-Agent", "Twitchy Gopher (https://github.com/ollieparsley/twitchy-gopher")
+	// Set the user-agent
+	req.Header.Add("User-Agent", "Twitchy Gopher (https://github.com/ollieparsley/twitchy-gopher")
 
 	// Specify the API version
-	s.Set("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", c.version))
+	req.Header.Add("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", 5))
 
-	// Add authentication
-	s.Set("Authorization", "OAuth "+c.oauthConfig.AccessToken)
+	// Authorization headers
+	req.Header.Add("Authorization", "OAuth "+c.oauthConfig.AccessToken)
+	req.Header.Add("Client-ID", c.oauthConfig.ClientID)
 
-	return s
+	// Add GET params
+	for key, val := range params {
+		req.URL.Query().Add(key, val)
+	}
+
+	resp, err := c.httpClient.Do(req)
+
+	if err != nil {
+		return errorToOutput(err)
+	}
+
+	// JSON decoding
+	if code := resp.StatusCode; 200 <= code && code <= 299 {
+		decodeErr := json.NewDecoder(resp.Body).Decode(output)
+		if decodeErr != nil {
+			return errorToOutput(decodeErr)
+		}
+		return nil
+	}
+
+	errorOutput := &ErrorOutput{}
+	json.NewDecoder(resp.Body).Decode(errorOutput)
+	return errorOutput
+}
+
+func errorToOutput(err error) *ErrorOutput {
+	return &ErrorOutput{
+		Message: err.Error(),
+		Error:   "Twitchy error",
+		Status:  -1,
+	}
+}
+
+// GetRoot - the base API request that is used to verify the users details
+func (c *Client) GetRoot() (*RootOutput, *ErrorOutput) {
+	output := new(RootOutput)
+	errorOutput := c.sendRequest("GET", "", nil, output)
+	return output, errorOutput
+}
+
+// GetBlocks - return a list of users from a users' block list
+func (c *Client) GetBlocks(input *BlocksInput) (*BlocksOutput, *ErrorOutput) {
+	params := map[string]string{}
+	if input.Limit != 0 {
+		params["limit"] = strconv.Itoa(input.Limit)
+	}
+	if input.Offset != 0 {
+		params["offset"] = strconv.Itoa(input.Offset)
+	}
+	output := new(BlocksOutput)
+	errorOutput := c.sendRequest("GET", fmt.Sprintf("users/%d/blocks", input.UserID), params, output)
+	return output, errorOutput
 }

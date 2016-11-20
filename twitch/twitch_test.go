@@ -1,8 +1,12 @@
 package twitch
 
 import (
+	"errors"
 	"net/http"
+	"reflect"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
 )
 
 func TestNewClient(t *testing.T) {
@@ -16,7 +20,7 @@ func TestNewClient(t *testing.T) {
 
 	client := NewClient(oauthConfig, httpClient)
 
-	if client.apiURL != "https://api.twitch.tv/kracken/" {
+	if client.apiURL != "https://api.twitch.tv/kraken/" {
 		t.Errorf("client.apiURL was not correct: %s", client.apiURL)
 	}
 	if client.version != 5 {
@@ -30,35 +34,121 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
-func TestGetSling(t *testing.T) {
-	oauthConfig := &OAuthConfig{
-		ClientID:     "client-id",
-		ClientSecret: "client-secret",
-		AccessToken:  "access-token",
+func TestErrorToOutput(t *testing.T) {
+
+	err := errors.New("Test error")
+
+	output := errorToOutput(err)
+	if output.Message != "Test error" {
+		t.Errorf("error output message was not \"Test error\": %s", output.Message)
+	}
+	if output.Error != "Twitchy error" {
+		t.Errorf("error output error was not \"Test error\": %s", output.Error)
+	}
+	if output.Status != -1 {
+		t.Errorf("error output status was not -1: %d", output.Status)
+	}
+}
+
+func TestGetRoot(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "https://api.twitch.tv/kraken/",
+		httpmock.NewStringResponder(200, `{"token":{"valid":true,"authorization":{"scopes":["channel_read"],"created_at":"2016-11-20T17:26:13Z","updated_at":"2016-11-20T17:26:13Z"},"user_name":"testing_user","client_id":"testing-client-id"}}`))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	output, errorOutput := client.GetRoot()
+
+	if errorOutput != nil {
+		t.Errorf("GetRoot errorOutput should have been null: %+v", errorOutput)
 	}
 
-	httpClient := &http.Client{}
+	if output.Token.Valid != true {
+		t.Errorf("GetRoot token.valid was not true")
+	}
+	if !reflect.DeepEqual(output.Token.Authorization.Scopes, []string{"channel_read"}) {
+		t.Errorf("GetRoot token.authorization.scopes was not correct %+v", output.Token.Authorization.Scopes)
+	}
+	if output.Token.Username != "testing_user" {
+		t.Errorf("GetRoot token.valid was not \"testing_user\": %s", output.Token.Username)
+	}
+	if output.Token.ClientID != "testing-client-id" {
+		t.Errorf("GetRoot token.clientid was not \"testing-client-id\": %s", output.Token.ClientID)
+	}
+}
 
-	client := NewClient(oauthConfig, httpClient)
+func TestGetRootWithError(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
-	// get sling and get the raw http request
-	request, err := client.getSling().Request()
-	if err != nil {
-		t.Errorf("error with sling http request: %s", err.Error())
+	httpmock.RegisterResponder("GET", "https://api.twitch.tv/kraken/",
+		httpmock.NewStringResponder(400, `{"error":"Bad Request","status":400,"message":"Some error message"}`))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	_, errorOutput := client.GetRoot()
+
+	if errorOutput == nil {
+		t.Errorf("GetRootWithError errorOutput shouldn't have been nil")
 	}
-	if request.URL.Scheme != "https" {
-		t.Errorf("request scheme was not https: %s", request.URL.Scheme)
+
+	if errorOutput.Error != "Bad Request" {
+		t.Errorf("GetRootWithError error.Error was not \"Bad Request\": %s", errorOutput.Error)
 	}
-	if request.URL.Host != "api.twitch.tv" {
-		t.Errorf("request scheme was not api.twitch.tv: %s", request.URL.Host)
+	if errorOutput.Status != 400 {
+		t.Errorf("GetRootWithError error.Status was not 400: %d", errorOutput.Error)
 	}
-	if request.URL.Path != "/kracken/" {
-		t.Errorf("request scheme was not /kracken/: %s", request.URL.Path)
+	if errorOutput.Message != "Some error message" {
+		t.Errorf("GetRootWithError error.Message was not \"Some error message\": %s", errorOutput.Message)
 	}
-	if request.Header.Get("Authorization") != "OAuth access-token" {
-		t.Errorf("request Authorization header was not was not \"OAuth access-token\": %s", request.Header.Get("Authorization"))
+}
+
+func TestGetBlocks(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "https://api.twitch.tv/kraken/users/1/blocks",
+		httpmock.NewStringResponder(200, `{"blocks":[{"updated_at":"2013-02-07T01:04:43Z","user":{"updated_at":"2013-02-06T22:44:19Z","display_name":"test_user_troll","type":"user","bio":"I'm a troll.. Kappa","name":"test_user_troll","_id":13460644,"logo":"http://something.net/foo.png","created_at":"2010-06-30T08:26:49Z"},"_id":970887}]}`))
+
+	client := NewClient(&OAuthConfig{
+		ClientID:    "pzqv1a6n4r1l7wzto3mor00bzkpmw8c",
+		AccessToken: "xte5p3cozk1tbv2gbmnalobl9z77vu",
+	}, &http.Client{})
+
+	output, errorOutput := client.GetBlocks(&BlocksInput{
+		UserID: 1,
+		Limit:  25,
+		Offset: 0,
+	})
+
+	if errorOutput != nil {
+		t.Errorf("GetBlocks errorOutput should have been nil: %+v", errorOutput)
 	}
-	if request.Header.Get("Accept") != "application/vnd.twitchtv.v5+json" {
-		t.Errorf("request Accept header was not was not \"application/vnd.twitchtv.v5+json\": %s", request.Header.Get("Accept"))
+
+	if len(output.Blocks) != 1 {
+		t.Errorf("GetBlocks the blocks list was not 1 in length: %d", len(output.Blocks))
+	}
+
+	block := output.Blocks[0]
+
+	if block.ID != 970887 {
+		t.Errorf("GetBlocks the block id was not 970887: %d", block.ID)
+	}
+	if block.User.ID != 13460644 {
+		t.Errorf("GetBlocks the block user id was not 13460644: %d", block.User.ID)
+	}
+	if block.User.DisplayName != "test_user_troll" {
+		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %d", block.User.DisplayName)
+	}
+	if block.User.Type != "user" {
+		t.Errorf("GetBlocks the block user type was not user: %d", block.User.Type)
+	}
+	if block.User.Bio != "I'm a troll.. Kappa" {
+		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %d", block.User.Bio)
+	}
+	if block.User.Logo != "http://something.net/foo.png" {
+		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %d", block.User.Logo)
 	}
 }
