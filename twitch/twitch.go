@@ -1,9 +1,11 @@
 package twitch
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -34,8 +36,19 @@ func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
 func (c *Client) createRequest(method string, path string, params map[string]string) *http.Request {
 
 	// Create new http request and set it all up!
-	url := fmt.Sprintf("%s%s", c.apiURL, path)
-	req, _ := http.NewRequest(method, url, nil)
+	fullUrl := fmt.Sprintf("%s%s", c.apiURL, path)
+
+	// buffer
+	var buffer *bytes.Buffer = nil
+	req, _ := http.NewRequest(method, fullUrl, nil)
+	if method != "GET" && params != nil {
+		data := url.Values{}
+		for key, val := range params {
+			data.Add(key, val)
+		}
+		buffer = bytes.NewBufferString(data.Encode())
+		req, _ = http.NewRequest(method, fullUrl, buffer)
+	}
 
 	// Set the user-agent
 	req.Header.Add("User-Agent", "Twitchy Gopher (https://github.com/ollieparsley/twitchy-gopher")
@@ -48,8 +61,10 @@ func (c *Client) createRequest(method string, path string, params map[string]str
 	req.Header.Add("Client-ID", c.oauthConfig.ClientID)
 
 	// Add GET params
-	for key, val := range params {
-		req.URL.Query().Add(key, val)
+	if method == "GET" {
+		for key, val := range params {
+			req.URL.Query().Add(key, val)
+		}
 	}
 
 	return req
