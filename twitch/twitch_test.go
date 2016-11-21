@@ -121,6 +121,50 @@ func TestCreateRequestGetRequest(t *testing.T) {
 	}
 }
 
+func TestPerformRequestClientError(t *testing.T) {
+	req := &http.Request{}
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+	errorOutput := client.performRequest(req, new(RootOutput))
+
+	if errorOutput == nil {
+		t.Errorf("performRequestClientError errorOutput was nil")
+	}
+	if errorOutput.Status != -1 {
+		t.Errorf("performRequestClientError error status was not -1: %d", errorOutput.Status)
+	}
+	if errorOutput.Error != "Twitchy error" {
+		t.Errorf("performRequestClientError error status was \"Twitchy error\": %s", errorOutput.Error)
+	}
+	if errorOutput.Message != "http: nil Request.URL" {
+		t.Errorf("performRequestClientError error message was \"http: nil Request.URL\": %s", errorOutput.Message)
+	}
+}
+
+func TestPerformRequestJSONError(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "https://api.twitch.tv/kraken/",
+		httpmock.NewStringResponder(200, `{"foo":{{]]"}}`))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	_, errorOutput := client.GetRoot()
+
+	if errorOutput == nil {
+		t.Errorf("TestPerformRequestJSONError errorOutput was nil")
+	}
+	if errorOutput.Status != -1 {
+		t.Errorf("TestPerformRequestJSONError error status was not -1: %d", errorOutput.Status)
+	}
+	if errorOutput.Error != "Twitchy error" {
+		t.Errorf("TestPerformRequestJSONError error status was \"Twitchy error\": %s", errorOutput.Error)
+	}
+	if errorOutput.Message != "invalid character '{' looking for beginning of object key string" {
+		t.Errorf("TestPerformRequestJSONError error message was \"invalid character '{' looking for beginning of object key string\": %s", errorOutput.Message)
+	}
+}
+
 func TestGetRoot(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -188,7 +232,7 @@ func TestGetBlocks(t *testing.T) {
 	output, errorOutput := client.ListBlocks(&ListBlocksInput{
 		UserID: 1,
 		Limit:  25,
-		Offset: 0,
+		Offset: 50,
 	})
 
 	if errorOutput != nil {

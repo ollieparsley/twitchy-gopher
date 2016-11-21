@@ -75,10 +75,7 @@ func (c *Client) createRequest(method string, path string, params map[string]str
 	return req
 }
 
-func (c *Client) sendRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
-	// Create the request
-	req := c.createRequest(method, path, params)
-
+func (c *Client) performRequest(req *http.Request, output interface{}) *ErrorOutput {
 	// Make the request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -100,6 +97,14 @@ func (c *Client) sendRequest(method string, path string, params map[string]strin
 	errorOutput := &ErrorOutput{}
 	json.NewDecoder(resp.Body).Decode(errorOutput)
 	return errorOutput
+}
+
+func (c *Client) sendRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
+	// Create the request
+	req := c.createRequest(method, path, params)
+
+	// Perform the request
+	return c.performRequest(req, output)
 }
 
 func errorToOutput(err error) *ErrorOutput {
