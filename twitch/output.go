@@ -31,18 +31,6 @@ type RootTokenAuthorization struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-//BlocksOutput the array of blocks
-type BlocksOutput struct {
-	Blocks []BlockOutput
-}
-
-//BlockOutput a single block
-type BlockOutput struct {
-	UpdatedAt time.Time `json:"updated_at"`
-	ID        int64     `json:"_id"`
-	User      BlockUser `json:"user"`
-}
-
 //BlockUser the user secton within a block
 type BlockUser struct {
 	ID          int64     `json:"_id"`
@@ -55,11 +43,16 @@ type BlockUser struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-//BlocksInput the input used with the Blocks endpoint
-type BlocksInput struct {
+//ListBlocksInput the input used with the Blocks endpoint
+type ListBlocksInput struct {
 	UserID int64 // The user ID for user whos block list you want to return
 	Limit  int   // Maximum number of objects in array. Default is 25. Maximum is 100.
 	Offset int   // Object offset for pagination. Default is 0.
+}
+
+//ListBlocksOutput the array of blocks
+type ListBlocksOutput struct {
+	Blocks []BlockUserOutput
 }
 
 //BlockUserInput the inputs used with the block user endpoint
@@ -67,3 +60,19 @@ type BlockUserInput struct {
 	UserID       int64
 	TargetUserID int64
 }
+
+//BlockUserOutput a single block
+type BlockUserOutput struct {
+	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64     `json:"_id"`
+	User      BlockUser `json:"user"`
+}
+
+//UnblockUserInput the inputs used when deleting a block
+type UnblockUserInput struct {
+	UserID       int64
+	TargetUserID int64
+}
+
+//UnblockUserOutput currently the output is empty
+type UnblockUserOutput struct{}

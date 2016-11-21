@@ -185,39 +185,39 @@ func TestGetBlocks(t *testing.T) {
 
 	client := NewClient(&OAuthConfig{}, &http.Client{})
 
-	output, errorOutput := client.GetBlocks(&BlocksInput{
+	output, errorOutput := client.ListBlocks(&ListBlocksInput{
 		UserID: 1,
 		Limit:  25,
 		Offset: 0,
 	})
 
 	if errorOutput != nil {
-		t.Errorf("GetBlocks errorOutput should have been nil: %+v", errorOutput)
+		t.Errorf("ListBlocks errorOutput should have been nil: %+v", errorOutput)
 	}
 
 	if len(output.Blocks) != 1 {
-		t.Errorf("GetBlocks the blocks list was not 1 in length: %d", len(output.Blocks))
+		t.Errorf("ListBlocks the blocks list was not 1 in length: %d", len(output.Blocks))
 	}
 
 	block := output.Blocks[0]
 
 	if block.ID != 970887 {
-		t.Errorf("GetBlocks the block id was not 970887: %d", block.ID)
+		t.Errorf("ListBlocks the block id was not 970887: %d", block.ID)
 	}
 	if block.User.ID != 13460644 {
-		t.Errorf("GetBlocks the block user id was not 13460644: %d", block.User.ID)
+		t.Errorf("ListBlocks the block user id was not 13460644: %d", block.User.ID)
 	}
 	if block.User.DisplayName != "test_user_troll" {
-		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %s", block.User.DisplayName)
+		t.Errorf("ListBlocks the block user disply name was not test_user_troll: %s", block.User.DisplayName)
 	}
 	if block.User.Type != "user" {
-		t.Errorf("GetBlocks the block user type was not user: %s", block.User.Type)
+		t.Errorf("ListBlocks the block user type was not user: %s", block.User.Type)
 	}
 	if block.User.Bio != "I'm a troll.. Kappa" {
-		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %s", block.User.Bio)
+		t.Errorf("ListBlocks the block user bio was not \"I'm a troll.. Kappa\": %s", block.User.Bio)
 	}
 	if block.User.Logo != "http://something.net/foo.png" {
-		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %s", block.User.Logo)
+		t.Errorf("ListBlocks the block user logo was not http://something.net/foo.png: %s", block.User.Logo)
 	}
 }
 
@@ -236,25 +236,46 @@ func TestBlockUser(t *testing.T) {
 	})
 
 	if errorOutput != nil {
-		t.Errorf("GetBlocks errorOutput should have been nil: %+v", errorOutput)
+		t.Errorf("BlockUser errorOutput should have been nil: %+v", errorOutput)
 	}
 
 	if output.ID != 287813 {
-		t.Errorf("GetBlocks the block id was not 287813: %d", output.ID)
+		t.Errorf("BlockUser the block id was not 287813: %d", output.ID)
 	}
 	if output.User.ID != 22125774 {
-		t.Errorf("GetBlocks the block user id was not 22125774: %d", output.User.ID)
+		t.Errorf("BlockUser the block user id was not 22125774: %d", output.User.ID)
 	}
 	if output.User.DisplayName != "test_user_troll" {
-		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %s", output.User.DisplayName)
+		t.Errorf("BlockUser the block user disply name was not test_user_troll: %s", output.User.DisplayName)
 	}
 	if output.User.Type != "user" {
-		t.Errorf("GetBlocks the block user type was not user: %s", output.User.Type)
+		t.Errorf("BlockUser the block user type was not user: %s", output.User.Type)
 	}
 	if output.User.Bio != "I'm a troll.. Kappa" {
-		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %s", output.User.Bio)
+		t.Errorf("BlockUser the block user bio was not \"I'm a troll.. Kappa\": %s", output.User.Bio)
 	}
 	if output.User.Logo != "http://something.net/foo.png" {
-		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %s", output.User.Logo)
+		t.Errorf("BlockUser the block user logo was not http://something.net/foo.png: %s", output.User.Logo)
+	}
+}
+
+func TestUnblockUser(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("DELETE", "https://api.twitch.tv/kraken/users/1/blocks/2", httpmock.NewStringResponder(204, ``))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	output, errorOutput := client.UnblockUser(&UnblockUserInput{
+		UserID:       1,
+		TargetUserID: 2,
+	})
+
+	if errorOutput != nil {
+		t.Errorf("UnblockUser errorOutput should have been nil: %+v", errorOutput)
+	}
+	if output == nil {
+		t.Errorf("UnblockUser the output was nil")
 	}
 }
