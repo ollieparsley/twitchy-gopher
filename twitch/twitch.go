@@ -115,6 +115,10 @@ func errorToOutput(err error) *ErrorOutput {
 	}
 }
 
+//
+// BLOCKS
+//
+
 // GetRoot - the base API request that is used to verify the users details
 func (c *Client) GetRoot() (*RootOutput, *ErrorOutput) {
 	output := new(RootOutput)
@@ -147,5 +151,37 @@ func (c *Client) BlockUser(input *BlockUserInput) (*BlockUserOutput, *ErrorOutpu
 func (c *Client) UnblockUser(input *UnblockUserInput) (*UnblockUserOutput, *ErrorOutput) {
 	output := new(UnblockUserOutput)
 	errorOutput := c.sendRequest("DELETE", fmt.Sprintf("users/%d/blocks/%d", input.UserID, input.TargetUserID), nil, output)
+	return output, errorOutput
+}
+
+//
+// CHANNEL FEED
+//
+
+// ListChannelFeedPosts - List channel feed posts
+func (c *Client) ListChannelFeedPosts(input *ListChannelFeedPostsInput) (*ListChannelFeedPostsOutput, *ErrorOutput) {
+	output := new(ListChannelFeedPostsOutput)
+	errorOutput := c.sendRequest("GET", fmt.Sprintf("feed/%d/posts", input.ChannelID), nil, output)
+	return output, errorOutput
+}
+
+// CreateChannelFeedPost - create a post for a channel feed
+func (c *Client) CreateChannelFeedPost(input *CreateChannelFeedPostInput) (*CreateChannelFeedPostOutput, *ErrorOutput) {
+	params := map[string]string{}
+	params["content"] = input.Content
+	if input.Share == true {
+		params["share"] = "true"
+	} else {
+		params["share"] = "false"
+	}
+	output := new(CreateChannelFeedPostOutput)
+	errorOutput := c.sendRequest("POST", fmt.Sprintf("feed/%d/posts", input.ChannelID), params, output)
+	return output, errorOutput
+}
+
+// GetChannelFeedPost - Get a single channel feed post
+func (c *Client) GetChannelFeedPost(input *GetChannelFeedPostInput) (*GetChannelFeedPostOutput, *ErrorOutput) {
+	output := new(GetChannelFeedPostOutput)
+	errorOutput := c.sendRequest("GET", fmt.Sprintf("feed/%d/posts/%s", input.ChannelID, input.PostID), nil, output)
 	return output, errorOutput
 }
