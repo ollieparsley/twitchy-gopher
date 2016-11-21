@@ -37,7 +37,6 @@ func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
 }
 
 func (c *Client) createRequest(method string, path string, params map[string]string) *http.Request {
-
 	// Create new http request and set it all up!
 	fullURL := fmt.Sprintf("%s%s", c.apiURL, path)
 
@@ -54,6 +53,15 @@ func (c *Client) createRequest(method string, path string, params map[string]str
 		req, _ = http.NewRequest(method, fullURL, nil)
 	}
 
+	// Add GET params
+	if method == "GET" && params != nil {
+		q := req.URL.Query()
+		for key, val := range params {
+			q.Set(key, val)
+		}
+		req.URL.RawQuery = q.Encode()
+	}
+
 	// Set the user-agent
 	req.Header.Add("User-Agent", "Twitchy Gopher (https://github.com/ollieparsley/twitchy-gopher")
 
@@ -64,18 +72,10 @@ func (c *Client) createRequest(method string, path string, params map[string]str
 	req.Header.Add("Authorization", "OAuth "+c.oauthConfig.AccessToken)
 	req.Header.Add("Client-ID", c.oauthConfig.ClientID)
 
-	// Add GET params
-	if method == "GET" {
-		for key, val := range params {
-			req.URL.Query().Add(key, val)
-		}
-	}
-
 	return req
 }
 
 func (c *Client) sendRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
-
 	// Create the request
 	req := c.createRequest(method, path, params)
 

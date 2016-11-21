@@ -1,6 +1,7 @@
 package twitch
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"reflect"
@@ -75,6 +76,48 @@ func TestCreateRequest(t *testing.T) {
 	}
 	if req.Header.Get("Accept") != "application/vnd.twitchtv.v5+json" {
 		t.Errorf("createRequest Accept header was not was not \"application/vnd.twitchtv.v5+json\": %s", req.Header.Get("Accept"))
+	}
+}
+
+func TestCreateRequestPostRequest(t *testing.T) {
+	client := NewClient(&OAuthConfig{
+		ClientID:    "client-id",
+		AccessToken: "access-token",
+	}, &http.Client{})
+
+	params := map[string]string{}
+	params["foo"] = "bar"
+	params["hello"] = "world"
+
+	req := client.createRequest("POST", "foo/bar", params)
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(req.Body)
+	requestBody := buf.String()
+
+	expectedRequestBody := "foo=bar&hello=world"
+
+	if requestBody != expectedRequestBody {
+		t.Errorf("createRequestPostRequest body did not match %s : %s", expectedRequestBody, requestBody)
+	}
+}
+
+func TestCreateRequestGetRequest(t *testing.T) {
+	client := NewClient(&OAuthConfig{
+		ClientID:    "client-id",
+		AccessToken: "access-token",
+	}, &http.Client{})
+
+	params := map[string]string{}
+	params["foo"] = "bar"
+	params["hello"] = "world"
+
+	req := client.createRequest("GET", "foo/bar", params)
+	requestQuerystring := req.URL.RawQuery
+	expectedRequestQuerystring := "foo=bar&hello=world"
+
+	if requestQuerystring != expectedRequestQuerystring {
+		t.Errorf("createRequestGetRequest querytring did not match %s : %s", expectedRequestQuerystring, requestQuerystring)
 	}
 }
 
