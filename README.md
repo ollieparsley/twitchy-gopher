@@ -1,7 +1,7 @@
 # Twitchy-Gopher
 A golang client library for Twitch. Aiming to support V5 of the API and video uploading.
 
-![Travis-CI build status](https://travis-ci.org/ollieparsley/twitchy-gopher.svg?branch=master) [![Coverage Status](https://coveralls.io/repos/github/ollieparsley/twitchy-gopher/badge.svg)](https://coveralls.io/github/ollieparsley/twitchy-gopher)
+![Travis-CI build status](https://travis-ci.org/ollieparsley/twitchy-gopher.svg?branch=master)  [![Coverage Status](https://coveralls.io/repos/github/ollieparsley/twitchy-gopher/badge.svg)](https://coveralls.io/github/ollieparsley/twitchy-gopher)
 
 ![The Twitchy Gopher](https://raw.githubusercontent.com/ollieparsley/twitchy-gopher/master/twitchy-gopher.png)
 
@@ -29,7 +29,6 @@ func main() {
       ClientID: 'my-client-id',
       ClientSecret: 'my-client-secret',
       AccessToken: 'my-users-access-token',
-      AccessTokenSecret: 'my-users-access-token-secret',
     }, &http.Client{})
 
     // Make requests like this
