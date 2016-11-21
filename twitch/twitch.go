@@ -9,12 +9,14 @@ import (
 	"strconv"
 )
 
+//OAuthConfig contains all the oauth 2 config
 type OAuthConfig struct {
 	ClientID     string
 	ClientSecret string
 	AccessToken  string
 }
 
+//Client the object everything is based on
 type Client struct {
 	apiURL      string
 	version     int
@@ -22,6 +24,7 @@ type Client struct {
 	oauthConfig *OAuthConfig
 }
 
+//NewClient a nice way of creating a new Client
 func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
 	apiURL := "https://api.twitch.tv/kraken/"
 
@@ -36,25 +39,26 @@ func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
 func (c *Client) createRequest(method string, path string, params map[string]string) *http.Request {
 
 	// Create new http request and set it all up!
-	fullUrl := fmt.Sprintf("%s%s", c.apiURL, path)
+	fullURL := fmt.Sprintf("%s%s", c.apiURL, path)
 
 	// buffer
-	var buffer *bytes.Buffer = nil
-	req, _ := http.NewRequest(method, fullUrl, nil)
+	var req *http.Request
 	if method != "GET" && params != nil {
 		data := url.Values{}
 		for key, val := range params {
 			data.Add(key, val)
 		}
-		buffer = bytes.NewBufferString(data.Encode())
-		req, _ = http.NewRequest(method, fullUrl, buffer)
+		buffer := bytes.NewBufferString(data.Encode())
+		req, _ = http.NewRequest(method, fullURL, buffer)
+	} else {
+		req, _ = http.NewRequest(method, fullURL, nil)
 	}
 
 	// Set the user-agent
 	req.Header.Add("User-Agent", "Twitchy Gopher (https://github.com/ollieparsley/twitchy-gopher")
 
 	// Specify the API version
-	req.Header.Add("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", 5))
+	req.Header.Add("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", c.version))
 
 	// Authorization headers
 	req.Header.Add("Authorization", "OAuth "+c.oauthConfig.AccessToken)

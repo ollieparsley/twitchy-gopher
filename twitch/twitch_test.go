@@ -126,7 +126,7 @@ func TestGetRootWithError(t *testing.T) {
 		t.Errorf("GetRootWithError error.Error was not \"Bad Request\": %s", errorOutput.Error)
 	}
 	if errorOutput.Status != 400 {
-		t.Errorf("GetRootWithError error.Status was not 400: %d", errorOutput.Error)
+		t.Errorf("GetRootWithError error.Status was not 400: %s", errorOutput.Error)
 	}
 	if errorOutput.Message != "Some error message" {
 		t.Errorf("GetRootWithError error.Message was not \"Some error message\": %s", errorOutput.Message)
@@ -165,16 +165,16 @@ func TestGetBlocks(t *testing.T) {
 		t.Errorf("GetBlocks the block user id was not 13460644: %d", block.User.ID)
 	}
 	if block.User.DisplayName != "test_user_troll" {
-		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %d", block.User.DisplayName)
+		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %s", block.User.DisplayName)
 	}
 	if block.User.Type != "user" {
-		t.Errorf("GetBlocks the block user type was not user: %d", block.User.Type)
+		t.Errorf("GetBlocks the block user type was not user: %s", block.User.Type)
 	}
 	if block.User.Bio != "I'm a troll.. Kappa" {
-		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %d", block.User.Bio)
+		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %s", block.User.Bio)
 	}
 	if block.User.Logo != "http://something.net/foo.png" {
-		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %d", block.User.Logo)
+		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %s", block.User.Logo)
 	}
 }
 
@@ -203,15 +203,15 @@ func TestBlockUser(t *testing.T) {
 		t.Errorf("GetBlocks the block user id was not 22125774: %d", output.User.ID)
 	}
 	if output.User.DisplayName != "test_user_troll" {
-		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %d", output.User.DisplayName)
+		t.Errorf("GetBlocks the block user disply name was not test_user_troll: %s", output.User.DisplayName)
 	}
 	if output.User.Type != "user" {
-		t.Errorf("GetBlocks the block user type was not user: %d", output.User.Type)
+		t.Errorf("GetBlocks the block user type was not user: %s", output.User.Type)
 	}
 	if output.User.Bio != "I'm a troll.. Kappa" {
-		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %d", output.User.Bio)
+		t.Errorf("GetBlocks the block user bio was not \"I'm a troll.. Kappa\": %s", output.User.Bio)
 	}
 	if output.User.Logo != "http://something.net/foo.png" {
-		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %d", output.User.Logo)
+		t.Errorf("GetBlocks the block user logo was not http://something.net/foo.png: %s", output.User.Logo)
 	}
 }
