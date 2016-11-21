@@ -11,9 +11,16 @@ deps:
 	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/assert
 	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/mock
 	GOPATH=$(GOPATH) go get -v github.com/jarcoal/httpmock
+	GOPATH=$(GOPATH) go get -v github.com/mattn/goveralls
 
 test: deps
 	GOPATH=$(GOPATH) go test -v ./twitch
+
+coverage: deps
+	GOPATH=$(GOPATH) go test -cover ./twitch
+
+coverage-travis-ci: deps
+	$(GOPATH)/bin/goveralls -service=travis-ci
 
 docs:
 	@echo "Generate documentation docs"
