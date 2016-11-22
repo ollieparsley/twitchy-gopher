@@ -165,3 +165,37 @@ type GetChannelFeedPostInput struct {
 type GetChannelFeedPostOutput struct {
 	ChannelFeedPost
 }
+
+//DeleteChannelFeedPostInput the single channel feed post delete input
+type DeleteChannelFeedPostInput struct {
+	ChannelID int64
+	PostID    string
+}
+
+//DeleteChannelFeedPostOutput a single channel feed post deletion object
+type DeleteChannelFeedPostOutput struct{}
+
+//CreateChannelFeedPostReactionInput creating a reaction with an emote to a channel post
+type CreateChannelFeedPostReactionInput struct {
+	ChannelID int64
+	PostID    string
+	EmoteID   string
+}
+
+//CreateChannelFeedPostReactionOutput a reaction to a channel feed post
+type CreateChannelFeedPostReactionOutput struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	EmoteID   string    `json:"emote_id"`
+	User      User      `json:"user"`
+}
+
+//DeleteChannelFeedPostReactionInput the single channel feed post reaction delete input
+type DeleteChannelFeedPostReactionInput struct {
+	ChannelID int64
+	PostID    string
+	EmoteID   string
+}
+
+//DeleteChannelFeedPostReactionOutput a single channel feed post reaction deletion object
+type DeleteChannelFeedPostReactionOutput struct{}

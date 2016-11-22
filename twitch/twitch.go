@@ -185,3 +185,28 @@ func (c *Client) GetChannelFeedPost(input *GetChannelFeedPostInput) (*GetChannel
 	errorOutput := c.sendRequest("GET", fmt.Sprintf("feed/%d/posts/%s", input.ChannelID, input.PostID), nil, output)
 	return output, errorOutput
 }
+
+// DeleteChannelFeedPost - Delete a single channel feed post
+func (c *Client) DeleteChannelFeedPost(input *DeleteChannelFeedPostInput) (*DeleteChannelFeedPostOutput, *ErrorOutput) {
+	output := new(DeleteChannelFeedPostOutput)
+	errorOutput := c.sendRequest("DELETE", fmt.Sprintf("feed/%d/posts/%s", input.ChannelID, input.PostID), nil, output)
+	return output, errorOutput
+}
+
+// CreateChannelFeedPostReaction - create a reaction to a post on a channel feed
+func (c *Client) CreateChannelFeedPostReaction(input *CreateChannelFeedPostReactionInput) (*CreateChannelFeedPostReactionOutput, *ErrorOutput) {
+	params := map[string]string{}
+	params["emote_id"] = input.EmoteID
+	output := new(CreateChannelFeedPostReactionOutput)
+	errorOutput := c.sendRequest("POST", fmt.Sprintf("feed/%d/posts/%s/reactions", input.ChannelID, input.PostID), params, output)
+	return output, errorOutput
+}
+
+// DeleteChannelFeedPostReaction - Delete a single channel feed post reaction
+func (c *Client) DeleteChannelFeedPostReaction(input *DeleteChannelFeedPostReactionInput) (*DeleteChannelFeedPostReactionOutput, *ErrorOutput) {
+	params := map[string]string{}
+	params["emote_id"] = input.EmoteID
+	output := new(DeleteChannelFeedPostReactionOutput)
+	errorOutput := c.sendRequest("DELETE", fmt.Sprintf("feed/%d/posts/%s/reactions", input.ChannelID, input.PostID), nil, output)
+	return output, errorOutput
+}

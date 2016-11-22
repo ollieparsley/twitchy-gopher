@@ -488,3 +488,89 @@ func TestCreateChannelFeedPostNoShare(t *testing.T) {
 		t.Errorf("CreateChannelFeedPostNoShare errorOutput should have been nil: %+v", errorOutput)
 	}
 }
+
+func TestDeleteChannelFeedPost(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("DELETE", "https://api.twitch.tv/kraken/feed/12345/posts/20",
+		httpmock.NewStringResponder(204, ``))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	output, errorOutput := client.DeleteChannelFeedPost(&DeleteChannelFeedPostInput{
+		ChannelID: 12345,
+		PostID:    "20",
+	})
+
+	if errorOutput != nil {
+		t.Errorf("DeleteChannelFeedPost errorOutput should have been nil: %+v", errorOutput)
+	}
+
+	if output == nil {
+		t.Errorf("DeleteChannelFeedPost output shouldn't have been nil")
+	}
+}
+
+func TestCreateChannelFeedPostReaction(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("POST", "https://api.twitch.tv/kraken/feed/12345/posts/54321/reactions",
+		httpmock.NewStringResponder(200, `{"id":"20","created_at":"2016-01-29T21:07:23.075611Z","emote_id":"25","user":{"display_name":"bangbangalang","_id":104447238,"name":"bangbangalang","type":"user","bio":"i like turtles and cats","created_at":"2015-10-15T19:52:17Z","updated_at":"2016-01-29T21:06:42Z","logo":"http://something.net/foo.png"}}`))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	output, errorOutput := client.CreateChannelFeedPostReaction(&CreateChannelFeedPostReactionInput{
+		ChannelID: 12345,
+		PostID:    "54321",
+		EmoteID:   "25",
+	})
+
+	if errorOutput != nil {
+		t.Errorf("CreateChannelFeedPostReaction errorOutput should have been nil: %+v", errorOutput)
+	}
+
+	if output.ID != "20" {
+		t.Errorf("CreateChannelFeedPostReaction the reaction id was not \"20\": %s", output.ID)
+	}
+	if output.EmoteID != "25" {
+		t.Errorf("CreateChannelFeedPostReaction the reaction emote ID was not 25: %s", output.EmoteID)
+	}
+	if output.User.ID != 104447238 {
+		t.Errorf("CreateChannelFeedPostReaction the block user id was not 104447238: %d", output.User.ID)
+	}
+	if output.User.DisplayName != "bangbangalang" {
+		t.Errorf("CreateChannelFeedPostReaction the block user disply name was not bangbangalang: %s", output.User.DisplayName)
+	}
+	if output.User.Bio != "i like turtles and cats" {
+		t.Errorf("CreateChannelFeedPostReaction the block user bio was not \"i like turtles and cats\": %s", output.User.Bio)
+	}
+	if output.User.Logo != "http://something.net/foo.png" {
+		t.Errorf("CreateChannelFeedPostReaction the block user logo was not http://something.net/foo.png: %s", output.User.Logo)
+	}
+}
+
+func TestDeleteChannelFeedPostReaction(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("DELETE", "https://api.twitch.tv/kraken/feed/12345/posts/20/reactions",
+		httpmock.NewStringResponder(204, ``))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	output, errorOutput := client.DeleteChannelFeedPostReaction(&DeleteChannelFeedPostReactionInput{
+		ChannelID: 12345,
+		PostID:    "20",
+		EmoteID:   "25",
+	})
+
+	if errorOutput != nil {
+		t.Errorf("DeleteChannelFeedPostReaction errorOutput should have been nil: %+v", errorOutput)
+	}
+
+	if output == nil {
+		t.Errorf("DeleteChannelFeedPostReaction output shouldn't have been nil")
+	}
+}
