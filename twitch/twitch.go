@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 //OAuthConfig contains all the oauth 2 config
@@ -18,26 +19,31 @@ type OAuthConfig struct {
 
 //Client the object everything is based on
 type Client struct {
-	apiURL      string
-	version     int
-	httpClient  *http.Client
-	oauthConfig *OAuthConfig
+	apiURL        string
+	apiVersion    int
+	uploadURL     string
+	uploadVersion int
+	httpClient    *http.Client
+	oauthConfig   *OAuthConfig
 }
 
 //NewClient a nice way of creating a new Client
 func NewClient(oauthConfig *OAuthConfig, httpClient *http.Client) *Client {
 	apiURL := "https://api.twitch.tv/kraken/"
+	uploadURL := "https://uploads.twitch.tv/"
 
 	return &Client{
-		apiURL:      apiURL,
-		version:     5,
-		httpClient:  httpClient,
-		oauthConfig: oauthConfig,
+		apiURL:        apiURL,
+		apiVersion:    5,
+		uploadURL:     uploadURL,
+		uploadVersion: 4,
+		httpClient:    httpClient,
+		oauthConfig:   oauthConfig,
 	}
 }
 
-func (c *Client) createRequest(method string, path string, params map[string]string) *http.Request {
-	// Create new http request and set it all up!
+//createBaseRequest Create new http request and set it all up
+func (c *Client) createBaseRequest(method string, path string, params map[string]string) *http.Request {
 	fullURL := fmt.Sprintf("%s%s", c.apiURL, path)
 
 	// buffer
@@ -65,8 +71,11 @@ func (c *Client) createRequest(method string, path string, params map[string]str
 	// Set the user-agent
 	req.Header.Add("User-Agent", "Twitchy Gopher (https://github.com/ollieparsley/twitchy-gopher")
 
-	// Specify the API version
-	req.Header.Add("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", c.version))
+	return c.authorizeRequest(req)
+}
+
+//authorizeRequest add the auth headers for the request
+func (c *Client) authorizeRequest(req *http.Request) *http.Request {
 
 	// Authorization headers
 	req.Header.Add("Authorization", "OAuth "+c.oauthConfig.AccessToken)
@@ -77,14 +86,22 @@ func (c *Client) createRequest(method string, path string, params map[string]str
 
 func (c *Client) performRequest(req *http.Request, output interface{}) *ErrorOutput {
 	// Make the request
+	//fmt.Printf("\nURL: %+v\n", req.URL)
+	//fmt.Printf("\nHEADERS: %+v\n", req.Header)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return errorToOutput(err)
 	}
 
+	//buf := new(bytes.Buffer)
+	//buf.ReadFrom(resp.Body)
+	//bodyString := buf.String()
+	//dump, err := httputil.DumpResponse(resp, true)
+	//fmt.Printf("BODY: %+v", string(dump))
+
 	// JSON decoding
 	code := resp.StatusCode
-	if code == 204 {
+	if code == 204 || resp.Header.Get("Content-Length") == "0" {
 		return nil
 	} else if 200 <= code && code <= 299 {
 		decodeErr := json.NewDecoder(resp.Body).Decode(output)
@@ -99,9 +116,44 @@ func (c *Client) performRequest(req *http.Request, output interface{}) *ErrorOut
 	return errorOutput
 }
 
-func (c *Client) sendRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
+func (c *Client) createAPIRequest(method string, path string, params map[string]string) *http.Request {
+	req := c.createBaseRequest(method, path, params)
+	req.Header.Set("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", c.apiVersion))
+	return req
+}
+
+func (c *Client) sendAPIRequest(method string, path string, params map[string]string, output interface{}) *ErrorOutput {
+	// Create API request
+	req := c.createAPIRequest(method, path, params)
+
+	// Specify the API version
+	req.Header.Set("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", c.apiVersion))
+
+	// Perform the request
+	return c.performRequest(req, output)
+}
+
+func (c *Client) createUploadRequest(method string, path string, contentType string, body *bytes.Buffer) *http.Request {
 	// Create the request
-	req := c.createRequest(method, path, params)
+	req, _ := http.NewRequest(method, c.uploadURL+path, body)
+
+	// Add the content type for the request
+	if contentType != "" {
+		req.Header.Add("Content-Type", contentType)
+	}
+	req.Header.Add("Content-Length", strconv.Itoa(body.Len()))
+
+	// Specify the API version
+	req.Header.Set("Accept", fmt.Sprintf("application/vnd.twitchtv.v%d+json", c.uploadVersion))
+
+	// Authorize the request
+	req = c.authorizeRequest(req)
+	return req
+}
+
+func (c *Client) sendUploadRequest(method string, path string, contentType string, body *bytes.Buffer, output interface{}) *ErrorOutput {
+	// Create upload request
+	req := c.createUploadRequest(method, path, contentType, body)
 
 	// Perform the request
 	return c.performRequest(req, output)
@@ -116,15 +168,48 @@ func errorToOutput(err error) *ErrorOutput {
 }
 
 //
-// BLOCKS
+// UPLOAD
+//
+
+// CreateVideo - Create the skeleton for a video to upload the content to
+func (c *Client) CreateVideo(input *CreateVideoInput) (*CreateVideoOutput, *ErrorOutput) {
+	output := new(CreateVideoOutput)
+	params := map[string]string{}
+	params["channel_name"] = input.ChannelName
+	//V5 params["channel_id"] = strconv.FormatInt(input.ChannelID, 10)
+	params["title"] = input.Title
+	errorOutput := c.sendAPIRequest("POST", "videos", params, output)
+	return output, errorOutput
+}
+
+// UploadVideoPart - Upload a video part
+func (c *Client) UploadVideoPart(input *UploadVideoPartInput) (*UploadVideoPartOutput, *ErrorOutput) {
+	output := new(UploadVideoPartOutput)
+	errorOutput := c.sendUploadRequest("PUT", fmt.Sprintf("upload/%s?upload_token=%s&part=%d", strings.Replace(input.VideoID, "v", "", 1), input.Token, input.Part), "", input.Body, output)
+	return output, errorOutput
+}
+
+// CompleteVideo - Complete a video upload
+func (c *Client) CompleteVideo(input *CompleteVideoInput) (*CompleteVideoOutput, *ErrorOutput) {
+	output := new(CompleteVideoOutput)
+	errorOutput := c.sendUploadRequest("POST", fmt.Sprintf("upload/%s/complete?upload_token=%s", strings.Replace(input.VideoID, "v", "", 1), input.Token), "application/x-www-form-urlencoded", bytes.NewBuffer([]byte{}), output)
+	return output, errorOutput
+}
+
+//
+// ROOT
 //
 
 // GetRoot - the base API request that is used to verify the users details
 func (c *Client) GetRoot() (*RootOutput, *ErrorOutput) {
 	output := new(RootOutput)
-	errorOutput := c.sendRequest("GET", "", nil, output)
+	errorOutput := c.sendAPIRequest("GET", "", nil, output)
 	return output, errorOutput
 }
+
+//
+// BLOCKS
+//
 
 // ListBlocks - return a list of users from a users' block list
 func (c *Client) ListBlocks(input *ListBlocksInput) (*ListBlocksOutput, *ErrorOutput) {
@@ -136,21 +221,21 @@ func (c *Client) ListBlocks(input *ListBlocksInput) (*ListBlocksOutput, *ErrorOu
 		params["offset"] = strconv.Itoa(input.Offset)
 	}
 	output := new(ListBlocksOutput)
-	errorOutput := c.sendRequest("GET", fmt.Sprintf("users/%d/blocks", input.UserID), params, output)
+	errorOutput := c.sendAPIRequest("GET", fmt.Sprintf("users/%d/blocks", input.UserID), params, output)
 	return output, errorOutput
 }
 
 // BlockUser - Block a user (target) on behalf of another user
 func (c *Client) BlockUser(input *BlockUserInput) (*BlockUserOutput, *ErrorOutput) {
 	output := new(BlockUserOutput)
-	errorOutput := c.sendRequest("PUT", fmt.Sprintf("users/%d/blocks/%d", input.UserID, input.TargetUserID), nil, output)
+	errorOutput := c.sendAPIRequest("PUT", fmt.Sprintf("users/%d/blocks/%d", input.UserID, input.TargetUserID), nil, output)
 	return output, errorOutput
 }
 
 // UnblockUser - Unblock a user (target) on behalf of another user
 func (c *Client) UnblockUser(input *UnblockUserInput) (*UnblockUserOutput, *ErrorOutput) {
 	output := new(UnblockUserOutput)
-	errorOutput := c.sendRequest("DELETE", fmt.Sprintf("users/%d/blocks/%d", input.UserID, input.TargetUserID), nil, output)
+	errorOutput := c.sendAPIRequest("DELETE", fmt.Sprintf("users/%d/blocks/%d", input.UserID, input.TargetUserID), nil, output)
 	return output, errorOutput
 }
 
@@ -161,7 +246,7 @@ func (c *Client) UnblockUser(input *UnblockUserInput) (*UnblockUserOutput, *Erro
 // ListChannelFeedPosts - List channel feed posts
 func (c *Client) ListChannelFeedPosts(input *ListChannelFeedPostsInput) (*ListChannelFeedPostsOutput, *ErrorOutput) {
 	output := new(ListChannelFeedPostsOutput)
-	errorOutput := c.sendRequest("GET", fmt.Sprintf("feed/%d/posts", input.ChannelID), nil, output)
+	errorOutput := c.sendAPIRequest("GET", fmt.Sprintf("feed/%d/posts", input.ChannelID), nil, output)
 	return output, errorOutput
 }
 
@@ -175,21 +260,21 @@ func (c *Client) CreateChannelFeedPost(input *CreateChannelFeedPostInput) (*Crea
 		params["share"] = "false"
 	}
 	output := new(CreateChannelFeedPostOutput)
-	errorOutput := c.sendRequest("POST", fmt.Sprintf("feed/%d/posts", input.ChannelID), params, output)
+	errorOutput := c.sendAPIRequest("POST", fmt.Sprintf("feed/%d/posts", input.ChannelID), params, output)
 	return output, errorOutput
 }
 
 // GetChannelFeedPost - Get a single channel feed post
 func (c *Client) GetChannelFeedPost(input *GetChannelFeedPostInput) (*GetChannelFeedPostOutput, *ErrorOutput) {
 	output := new(GetChannelFeedPostOutput)
-	errorOutput := c.sendRequest("GET", fmt.Sprintf("feed/%d/posts/%s", input.ChannelID, input.PostID), nil, output)
+	errorOutput := c.sendAPIRequest("GET", fmt.Sprintf("feed/%d/posts/%s", input.ChannelID, input.PostID), nil, output)
 	return output, errorOutput
 }
 
 // DeleteChannelFeedPost - Delete a single channel feed post
 func (c *Client) DeleteChannelFeedPost(input *DeleteChannelFeedPostInput) (*DeleteChannelFeedPostOutput, *ErrorOutput) {
 	output := new(DeleteChannelFeedPostOutput)
-	errorOutput := c.sendRequest("DELETE", fmt.Sprintf("feed/%d/posts/%s", input.ChannelID, input.PostID), nil, output)
+	errorOutput := c.sendAPIRequest("DELETE", fmt.Sprintf("feed/%d/posts/%s", input.ChannelID, input.PostID), nil, output)
 	return output, errorOutput
 }
 
@@ -198,7 +283,7 @@ func (c *Client) CreateChannelFeedPostReaction(input *CreateChannelFeedPostReact
 	params := map[string]string{}
 	params["emote_id"] = input.EmoteID
 	output := new(CreateChannelFeedPostReactionOutput)
-	errorOutput := c.sendRequest("POST", fmt.Sprintf("feed/%d/posts/%s/reactions", input.ChannelID, input.PostID), params, output)
+	errorOutput := c.sendAPIRequest("POST", fmt.Sprintf("feed/%d/posts/%s/reactions", input.ChannelID, input.PostID), params, output)
 	return output, errorOutput
 }
 
@@ -207,6 +292,6 @@ func (c *Client) DeleteChannelFeedPostReaction(input *DeleteChannelFeedPostReact
 	params := map[string]string{}
 	params["emote_id"] = input.EmoteID
 	output := new(DeleteChannelFeedPostReactionOutput)
-	errorOutput := c.sendRequest("DELETE", fmt.Sprintf("feed/%d/posts/%s/reactions", input.ChannelID, input.PostID), nil, output)
+	errorOutput := c.sendAPIRequest("DELETE", fmt.Sprintf("feed/%d/posts/%s/reactions", input.ChannelID, input.PostID), nil, output)
 	return output, errorOutput
 }

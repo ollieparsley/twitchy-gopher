@@ -5,6 +5,10 @@ A golang client library for Twitch. Aiming to support V5 of the API and video up
 
 ![The Twitchy Gopher](https://raw.githubusercontent.com/ollieparsley/twitchy-gopher/master/twitchy-gopher.png)
 
+# Progress
+
+This is a work in progress and is not complete. Version 5 of the Twitch API is also not fully released.
+
 # Installing
 
 ```

@@ -1,6 +1,7 @@
 package twitch
 
 import (
+	"bytes"
 	"time"
 )
 
@@ -31,8 +32,8 @@ type RootToken struct {
 //RootTokenAuthorization The auth object within the root token section
 type RootTokenAuthorization struct {
 	Scopes    []string  `json:"scopes"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 //User the user secton within a block
@@ -45,6 +46,115 @@ type User struct {
 	Logo        string    `json:"logo"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+//Channel details of a channel
+type Channel struct {
+	ID                           int64     `json:"_id"`
+	Name                         string    `json:"name"`
+	DisplayName                  string    `json:"display_name"`
+	Mature                       bool      `json:"mature"`
+	Status                       string    `json:"status"`
+	BroadcasterLanguage          string    `json:"broadcaster_language"`
+	Game                         string    `json:"game"`
+	Language                     string    `json:"language"`
+	CreatedAt                    time.Time `json:"created_at,omitempty"`
+	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+	Logo                         string    `json:"logo"`
+	VideoBanner                  string    `json:"video_banner"`
+	ProfileBanner                string    `json:"profile_banner"`
+	ProfileBannerBackgroundColor string    `json:"profile_banner_background_color"`
+	Partner                      bool      `json:"partner"`
+	URL                          string    `json:"url"`
+	Views                        int64     `json:"views"`
+	Followers                    int64     `json:"followers"`
+}
+
+//Upload details of an upload
+type Upload struct {
+	URL   string `json:"url"`
+	Token string `json:"token"`
+}
+
+//Preview details of the different preview image sizes
+type Preview struct {
+	Small    string `json:"small"`
+	Medium   string `json:"medium"`
+	Large    string `json:"large"`
+	Template string `json:"template"`
+}
+
+//Thumbnails details of the different thumbnail sizes
+type Thumbnails struct {
+	Small    []interface{} `json:"small"`
+	Medium   []interface{} `json:"medium"`
+	Large    []interface{} `json:"large"`
+	Template []interface{} `json:"template"`
+}
+
+//Video details of a video
+type Video struct {
+	ID            string `json:"_id"`
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	BroadcastID   int    `json:"broadcast_id"`
+	BroadcastType string `json:"broadcast_type"`
+	Status        string `json:"status"`
+	TagList       string `json:"tag_list"`
+	Views         int64  `json:"views"`
+	URL           string `json:"url"`
+	Language      string `json:"language"`
+	Viewable      string `json:"viewable"`
+	//ViewableAt    time.Time   `json:"viewable_at,omitempty"`
+	//RecordedAt    time.Time   `json:"recorded_at,omitempty"`
+	//CreatedAt     time.Time   `json:"created_at,omitempty"`
+	Game        interface{} `json:"game"`
+	Length      int64       `json:"length"`
+	Preview     Preview     `json:"preview"`
+	Thumbnails  Thumbnails  `json:"thumbnails"`
+	Paywalled   bool        `json:"paywalled"`
+	FPS         interface{} `json:"fps"`
+	Resolutions interface{} `json:"resolutions"`
+	Channel     Channel     `json:"channel"`
+}
+
+//
+// VIDEO
+//
+
+//CreateVideoInput the parameters used to create a video - V4
+type CreateVideoInput struct {
+	ChannelName string
+	Title       string
+}
+
+//CreateVideoOutput create the skeleton for a video upload
+type CreateVideoOutput struct {
+	Upload Upload `json:"upload"`
+	Video  Video  `json:"video"`
+}
+
+//CompleteVideoInput the parameters used to complete a video upload
+type CompleteVideoInput struct {
+	VideoID string
+	Token   string
+}
+
+//CompleteVideoOutput output from a completed video
+type CompleteVideoOutput struct{}
+
+//UploadVideoPartInput the parameters used to upload a video part
+type UploadVideoPartInput struct {
+	VideoID string
+	Token   string
+	Part    int
+	Body    *bytes.Buffer
+}
+
+//UploadVideoPartOutput output from upoading a video part
+type UploadVideoPartOutput struct {
+	Upload Upload `json:"upload"`
+	Video  Video  `json:"video"`
 }
 
 //
@@ -88,34 +198,6 @@ type UnblockUserOutput struct{}
 //
 // CHANNEL FEED POSTS
 //
-
-/*{
-  "_total": 8,
-  "_cursor": "1454101643075611000",
-  "posts": [{
-    "id": "20",
-    "created_at": "2016-01-29T21:07:23.075611Z",
-    "deleted": false,
-    "emotes": [ ],
-    "reactions": {
-      "endorse": {
-        "count": 2,
-        "user_ids": [ ]
-      }
-    },
-    "body": "Kappa post",
-    "user": {
-      "display_name": "bangbangalang",
-      "_id": 104447238,
-      "name": "bangbangalang",
-      "type": "user",
-      "bio": "i like turtles and cats",
-      "created_at": "2015-10-15T19:52:17Z",
-      "updated_at": "2016-01-29T21:06:42Z",
-      "logo": null
-    }
-  }]
-}*/
 
 //ChannelFeedPost the input used with the List channel feed posts endpoint
 type ChannelFeedPost struct {

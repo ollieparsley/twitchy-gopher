@@ -24,8 +24,11 @@ func TestNewClient(t *testing.T) {
 	if client.apiURL != "https://api.twitch.tv/kraken/" {
 		t.Errorf("client.apiURL was not correct: %s", client.apiURL)
 	}
-	if client.version != 5 {
-		t.Errorf("client.version was not 5: %d", client.version)
+	if client.apiVersion != 5 {
+		t.Errorf("client.apiVersion was not 5: %d", client.apiVersion)
+	}
+	if client.uploadVersion != 4 {
+		t.Errorf("client.uploadVersion was not 5: %d", client.uploadVersion)
 	}
 	if client.httpClient != httpClient {
 		t.Errorf("client.httpClient was not correct: %+v", client.httpClient)
@@ -51,35 +54,35 @@ func TestErrorToOutput(t *testing.T) {
 	}
 }
 
-func TestCreateRequest(t *testing.T) {
+func TestCreateAPIRequest(t *testing.T) {
 	client := NewClient(&OAuthConfig{
 		ClientID:    "client-id",
 		AccessToken: "access-token",
 	}, &http.Client{})
 
-	req := client.createRequest("GET", "foo/bar", nil)
+	req := client.createAPIRequest("GET", "foo/bar", nil)
 
 	if req.URL.Scheme != "https" {
-		t.Errorf("createRequest scheme was not https: %s", req.URL.Scheme)
+		t.Errorf("createAPIRequest scheme was not https: %s", req.URL.Scheme)
 	}
 	if req.URL.Host != "api.twitch.tv" {
-		t.Errorf("createRequest scheme was not api.twitch.tv: %s", req.URL.Host)
+		t.Errorf("createAPIRequest scheme was not api.twitch.tv: %s", req.URL.Host)
 	}
 	if req.URL.Path != "/kraken/foo/bar" {
-		t.Errorf("createRequest scheme was not /kraken/foo/bar: %s", req.URL.Path)
+		t.Errorf("createAPIRequest scheme was not /kraken/foo/bar: %s", req.URL.Path)
 	}
 	if req.Header.Get("Authorization") != "OAuth access-token" {
-		t.Errorf("createRequest Authorization header was not was not \"OAuth access-token\": %s", req.Header.Get("Authorization"))
+		t.Errorf("createAPIRequest Authorization header was not was not \"OAuth access-token\": %s", req.Header.Get("Authorization"))
 	}
 	if req.Header.Get("Client-ID") != "client-id" {
-		t.Errorf("createRequest Authorization header was not was not \"client-id\": %s", req.Header.Get("Client-ID"))
+		t.Errorf("createAPIRequest Authorization header was not was not \"client-id\": %s", req.Header.Get("Client-ID"))
 	}
 	if req.Header.Get("Accept") != "application/vnd.twitchtv.v5+json" {
-		t.Errorf("createRequest Accept header was not was not \"application/vnd.twitchtv.v5+json\": %s", req.Header.Get("Accept"))
+		t.Errorf("createAPIRequest Accept header was not was not \"application/vnd.twitchtv.v5+json\": %s", req.Header.Get("Accept"))
 	}
 }
 
-func TestCreateRequestPostRequest(t *testing.T) {
+func TestCreateAPIRequestPostRequest(t *testing.T) {
 	client := NewClient(&OAuthConfig{
 		ClientID:    "client-id",
 		AccessToken: "access-token",
@@ -89,7 +92,7 @@ func TestCreateRequestPostRequest(t *testing.T) {
 	params["foo"] = "bar"
 	params["hello"] = "world"
 
-	req := client.createRequest("POST", "foo/bar", params)
+	req := client.createAPIRequest("POST", "foo/bar", params)
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
@@ -98,11 +101,11 @@ func TestCreateRequestPostRequest(t *testing.T) {
 	expectedRequestBody := "foo=bar&hello=world"
 
 	if requestBody != expectedRequestBody {
-		t.Errorf("createRequestPostRequest body did not match %s : %s", expectedRequestBody, requestBody)
+		t.Errorf("createAPIRequestPostRequest body did not match %s : %s", expectedRequestBody, requestBody)
 	}
 }
 
-func TestCreateRequestGetRequest(t *testing.T) {
+func TestCreateAPIRequestGetRequest(t *testing.T) {
 	client := NewClient(&OAuthConfig{
 		ClientID:    "client-id",
 		AccessToken: "access-token",
@@ -112,12 +115,43 @@ func TestCreateRequestGetRequest(t *testing.T) {
 	params["foo"] = "bar"
 	params["hello"] = "world"
 
-	req := client.createRequest("GET", "foo/bar", params)
+	req := client.createAPIRequest("GET", "foo/bar", params)
 	requestQuerystring := req.URL.RawQuery
 	expectedRequestQuerystring := "foo=bar&hello=world"
 
 	if requestQuerystring != expectedRequestQuerystring {
-		t.Errorf("createRequestGetRequest querytring did not match %s : %s", expectedRequestQuerystring, requestQuerystring)
+		t.Errorf("createAPIRequest querytring did not match %s : %s", expectedRequestQuerystring, requestQuerystring)
+	}
+}
+
+func TestCreateUploadRequest(t *testing.T) {
+	client := NewClient(&OAuthConfig{
+		ClientID:    "client-id",
+		AccessToken: "access-token",
+	}, &http.Client{})
+
+	req := client.createUploadRequest("GET", "foo/bar", "some/content-type", bytes.NewBufferString("foobar"))
+
+	if req.URL.Scheme != "https" {
+		t.Errorf("createUploadRequest scheme was not https: %s", req.URL.Scheme)
+	}
+	if req.URL.Host != "uploads.twitch.tv" {
+		t.Errorf("createUploadRequest scheme was not api.twitch.tv: %s", req.URL.Host)
+	}
+	if req.URL.Path != "/foo/bar" {
+		t.Errorf("createUploadRequest scheme was not /kraken/foo/bar: %s", req.URL.Path)
+	}
+	if req.Header.Get("Authorization") != "OAuth access-token" {
+		t.Errorf("createUploadRequest Authorization header was not was not \"OAuth access-token\": %s", req.Header.Get("Authorization"))
+	}
+	if req.Header.Get("Client-ID") != "client-id" {
+		t.Errorf("createUploadRequest Authorization header was not was not \"client-id\": %s", req.Header.Get("Client-ID"))
+	}
+	if req.Header.Get("Content-Type") != "some/content-type" {
+		t.Errorf("createUploadRequest Content-Type header was not was not \"some/content-type\": %s", req.Header.Get("Content-Type"))
+	}
+	if req.Header.Get("Accept") != "application/vnd.twitchtv.v4+json" {
+		t.Errorf("createUploadRequest Accept header was not was not \"application/vnd.twitchtv.v4+json\": %s", req.Header.Get("Accept"))
 	}
 }
 
@@ -574,3 +608,112 @@ func TestDeleteChannelFeedPostReaction(t *testing.T) {
 		t.Errorf("DeleteChannelFeedPostReaction output shouldn't have been nil")
 	}
 }
+
+func TestCreateVideo(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("POST", "https://api.twitch.tv/kraken/videos",
+		httpmock.NewStringResponder(200, `{"upload":{"url":"https://uploads.twitch.tv/upload/123456","token":"this-is-a-token"},"video":{"title":"Test TitleD","description":null,"broadcast_id":1,"broadcast_type":"upload","status":"created","tag_list":"","views":0,"url":"https://www.twitch.tv/ollieparsleydev/v/103787281","language":"en","viewable":"public","viewable_at":null,"_id":"v123456","recorded_at":"2016-11-27T20:12:25Z","game":null,"length":0,"preview":{"small":"https://vod-secure.twitch.tv/_404/404_processing_80x45.png","medium":"https://vod-secure.twitch.tv/_404/404_processing_320x180.png","large":"https://vod-secure.twitch.tv/_404/404_processing_640x360.png","template":"https://vod-secure.twitch.tv/_404/404_processing_{width}x{height}.png"},"thumbnails":{"small":[],"medium":[],"large":[],"template":[]},"paywalled":false,"fps":{},"resolutions":{},"created_at":"2016-11-27T20:12:25Z","published_at":null,"_links":{"self":"https://api.twitch.tv/kraken/videos/v103787281","channel":"https://api.twitch.tv/kraken/channels/ollieparsleydev"},"channel":{"name":"ollieparsleydev","display_name":"ollieparsleydev"}}}`))
+
+	client := NewClient(&OAuthConfig{}, &http.Client{})
+
+	output, errorOutput := client.CreateVideo(&CreateVideoInput{
+		ChannelName: "ollieparsleydev",
+		//V5 ChannelID: 139985889,
+		Title: "Test upload",
+	})
+
+	if errorOutput != nil {
+		t.Errorf("CreateVideo errorOutput should have been nil: %+v", errorOutput)
+	}
+
+	if output == nil {
+		t.Errorf("CreateVideo output shouldn't have been nil")
+	}
+
+	if output.Upload.URL != "https://uploads.twitch.tv/upload/123456" {
+		t.Errorf("CreateVideo output upload URL was not \"https://uploads.twitch.tv/upload/123456\": %s", output.Upload.URL)
+	}
+
+	if output.Upload.Token != "this-is-a-token" {
+		t.Errorf("CreateVideo output upload token was not \"this-is-a-token\": %s", output.Upload.Token)
+	}
+
+	if output.Video.ID != "v123456" {
+		t.Errorf("CreateVideo output video ID was not \"v123456\": %s", output.Video.ID)
+	}
+
+}
+
+func TestUploadVideoPart(t *testing.T) {
+	client := NewClient(&OAuthConfig{
+		ClientID:    "pzqv1a6n4r1l7wzto3mor00bzkpmw8c",
+		AccessToken: "xte5p3cozk1tbv2gbmnalobl9z77vu",
+	}, &http.Client{})
+
+	bytes.NewBufferString("foobar")
+
+	uploadVideoPartOutput, uploadVideoPartError := client.UploadVideoPart(&UploadVideoPartInput{
+		VideoID: "",
+		Part:    1,
+		Token:   createOutput.Upload.Token,
+		Body:    buf,
+	})
+	if uploadPartErrorOutput != nil {
+		t.Errorf("TestUploadVideo uploadPartErrorOutput: %+v", uploadPartErrorOutput)
+	}
+
+	_, completeErrorOutput := client.CompleteVideo(&CompleteVideoInput{
+		VideoID: createOutput.Video.ID,
+		Token:   createOutput.Upload.Token,
+	})
+	if completeErrorOutput != nil {
+		t.Errorf("TestUploadVideo completeErrorOutput: %+v", createErrorOutput)
+	}
+
+}
+
+/*func TestUploadVideo(t *testing.T) {
+	client := NewClient(&OAuthConfig{
+		ClientID:    "pzqv1a6n4r1l7wzto3mor00bzkpmw8c",
+		AccessToken: "xte5p3cozk1tbv2gbmnalobl9z77vu",
+	}, &http.Client{})
+	client.apiVersion = 4
+
+	createOutput, createErrorOutput := client.CreateVideo(&CreateVideoInput{
+		ChannelName: "ollieparsleydev",
+		Title:       "Test upload",
+	})
+	if createErrorOutput != nil {
+		t.Errorf("TestUploadVideo createErrorOutput: %+v", createErrorOutput)
+	}
+
+	fmt.Printf("\n\nCREATE OUTPUT: %+v\n\n", createOutput)
+
+	buf := bytes.NewBuffer(nil)
+	f, _ := os.Open("/home/ollie/streaming.mp4") // Error handling elided for brevity.
+	io.Copy(buf, f)                              // Error handling elided for brevity.
+	f.Close()
+
+	fmt.Printf("CREATE OUTPUT: %+v", createOutput)
+
+	_, uploadPartErrorOutput := client.UploadVideoPart(&UploadVideoPartInput{
+		VideoID: createOutput.Video.ID,
+		Part:    1,
+		Token:   createOutput.Upload.Token,
+		Body:    buf,
+	})
+	if uploadPartErrorOutput != nil {
+		t.Errorf("TestUploadVideo uploadPartErrorOutput: %+v", uploadPartErrorOutput)
+	}
+
+	_, completeErrorOutput := client.CompleteVideo(&CompleteVideoInput{
+		VideoID: createOutput.Video.ID,
+		Token:   createOutput.Upload.Token,
+	})
+	if completeErrorOutput != nil {
+		t.Errorf("TestUploadVideo completeErrorOutput: %+v", createErrorOutput)
+	}
+
+}*/
