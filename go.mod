@@ -1,7 +1,5 @@
 module github.com/ollieparsley/twitchy-gopher
 
-go 1.14
-
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jarcoal/httpmock v1.0.6
