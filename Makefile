@@ -11,9 +11,8 @@ deps:
 	GO111MODULE=on go get -v ./...
 	GO111MODULE=on go get -v github.com/stretchr/testify/assert@v1.2.2
 	GO111MODULE=on go get -v github.com/stretchr/testify/mock@v1.2.2
-	GO111MODULE=on go get -v github.com/jarcoal/httpmock
-	GO111MODULE=on go get -v github.com/mattn/goveralls
-	GO111MODULE=on go get -u golang.org/x/tools/...
+	GO111MODULE=on go get -v github.com/jarcoal/httpmock@v1.0.4
+	GO111MODULE=on go get -v github.com/mattn/goveralls@v0.0.4
 
 test:
 	go test -v ./twitch
