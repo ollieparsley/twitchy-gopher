@@ -18,10 +18,10 @@ deps:
 	GO111MODULE=on $(GOBIN) get -v github.com/mattn/goveralls@v0.0.4
 
 test:
-	$(GOBIN) test -count=1 -v ./twitch
+	GO111MODULE=on $(GOBIN) test -count=1 -v ./twitch
 
 coverage:
-	$(GOBIN) test -count=1 -cover ./twitch
+	GO111MODULE=on $(GOBIN) test -count=1 -cover ./twitch
 
 coverage-travis-ci:
-	$(GOPATH)/bin/goveralls -service=travis-ci
+	GO111MODULE=on $(GOPATH)/bin/goveralls -service=travis-ci
