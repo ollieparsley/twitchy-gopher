@@ -6,6 +6,47 @@ import (
 	"strings"
 )
 
+//Upload details of an upload
+type Upload struct {
+	URL   string `json:"url"`
+	Token string `json:"token"`
+}
+
+//CreateVideoInput the parameters used to create a video - V4
+type CreateVideoInput struct {
+	ChannelName string
+	Title       string
+}
+
+//CreateVideoOutput create the skeleton for a video upload
+type CreateVideoOutput struct {
+	Upload Upload `json:"upload"`
+	Video  Video  `json:"video"`
+}
+
+//CompleteVideoInput the parameters used to complete a video upload
+type CompleteVideoInput struct {
+	VideoID string
+	Token   string
+}
+
+//CompleteVideoOutput output from a completed video
+type CompleteVideoOutput struct{}
+
+//UploadVideoPartInput the parameters used to upload a video part
+type UploadVideoPartInput struct {
+	VideoID string
+	Token   string
+	Part    int
+	Body    *bytes.Buffer
+}
+
+//UploadVideoPartOutput output from upoading a video part
+type UploadVideoPartOutput struct {
+	Upload Upload `json:"upload"`
+	Video  Video  `json:"video"`
+}
+
 // CreateVideo - Create the skeleton for a video to upload the content to
 func (c *Client) CreateVideo(input *CreateVideoInput) (*CreateVideoOutput, *ErrorOutput) {
 	output := new(CreateVideoOutput)
