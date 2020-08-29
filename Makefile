@@ -9,8 +9,8 @@ help:
 
 deps:
 	go get -v ./...
-	go get -v github.com/stretchr/testify/assert
-	go get -v github.com/stretchr/testify/mock
+	go get -v github.com/stretchr/testify/assert@v1.2.2
+	go get -v github.com/stretchr/testify/mock@v1.2.2
 	go get -v github.com/jarcoal/httpmock
 	go get -v github.com/mattn/goveralls
 	go get -u golang.org/x/tools/...
