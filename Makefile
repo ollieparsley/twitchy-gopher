@@ -1,6 +1,6 @@
 GOBIN = go
-GOBIN = go1.11.5
-GOBIN = go1.12.5
+#GOBIN = go1.11.5
+#GOBIN = go1.12.5
 #GOBIN = go1.13.5
 #GOBIN = go1.14.5
 
