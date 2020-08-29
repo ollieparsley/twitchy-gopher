@@ -1,28 +1,27 @@
-GOPATH ?= $(shell readlink -f $(shell pwd)/../../../../)
+GOBIN = go
+#GOBIN = go1.11.5
+#GOBIN = go1.12.5
+#GOBIN = go1.13.5
+#GOBIN = go1.14.5
+
+default: help
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  docs                    to build SDK documentation"
-	@echo "  test                    to run unit tests"
-	@echo "  deps                    to go get the dependencies"
+	@echo "  deps                Fetch dependencies"
+	@echo "  test                Run unit tests"
+	@echo "  coverage            Run test coverage"
+	@echo "  coverage-travis-ci  Run test coverage specific to travis ci"
 
 deps:
-	GOPATH=$(GOPATH) go get -v ./...
-	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/assert
-	GOPATH=$(GOPATH) go get -v github.com/stretchr/testify/mock
-	GOPATH=$(GOPATH) go get -v github.com/jarcoal/httpmock
-	GOPATH=$(GOPATH) go get -v github.com/mattn/goveralls
+	GO111MODULE=on $(GOBIN) get -t -v ./...
+	GO111MODULE=on $(GOBIN) get -v github.com/mattn/goveralls@v0.0.4
 
-test: deps
-	GOPATH=$(GOPATH) go test -v ./twitch
+test:
+	GO111MODULE=on $(GOBIN) test -count=1 -v ./twitch
 
-coverage: deps
-	GOPATH=$(GOPATH) go test -cover ./twitch
+coverage:
+	GO111MODULE=on $(GOBIN) test -count=1 -cover ./twitch
 
-coverage-travis-ci: deps
-	$(GOPATH)/bin/goveralls -service=travis-ci
-
-docs:
-	@echo "Generate documentation docs"
-	@mkdir -p target
-	GOPATH=$(GOPATH) godoc -html github.com/ollieparsley/twitchy-gopher > target/docs.html
+coverage-travis-ci:
+	GO111MODULE=on $(GOPATH)/bin/goveralls -service=travis-ci

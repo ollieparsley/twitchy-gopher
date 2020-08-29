@@ -1,5 +1,5 @@
 # Twitchy-Gopher
-A golang client library for Twitch. Aiming to support V5 of the API and video uploading.
+A golang client library for Twitch API v5. We will add support for Helix API as soon as it has parity with V5. We currently support golang versions >= 1.11.
 
 [![Build Status](https://travis-ci.org/ollieparsley/twitchy-gopher.svg?branch=master)](https://travis-ci.org/ollieparsley/twitchy-gopher) [![Coverage Status](https://coveralls.io/repos/github/ollieparsley/twitchy-gopher/badge.svg)](https://coveralls.io/github/ollieparsley/twitchy-gopher)
 
@@ -7,7 +7,7 @@ A golang client library for Twitch. Aiming to support V5 of the API and video up
 
 # Progress
 
-This is a work in progress and is not complete. Version 5 of the Twitch API is also not fully released.
+This is a work in progress and is not complete, we have several endpoints to add. We will continue with API v5 until the Helix API has parity, currently this is a long way off (according to Twitch dev documentation).
 
 # Installing
 
@@ -16,7 +16,7 @@ go get -u github.com/ollieparsley/twitchy-gopher
 ```
 
 # Usage
-This has only been tested with Go 1.5-1.7. This example is just to get a session. From a session you can make requests to the Twitch API.
+This example is just to get a session and then get the basic authentication details. Once you create client/session you can make requests to the Twitch API.
 
 ```
 package main
