@@ -1,3 +1,9 @@
+GOBIN = go
+GOBIN = go1.11.5
+GOBIN = go1.12.5
+#GOBIN = go1.13.5
+#GOBIN = go1.14.5
+
 default: help
 
 help:
@@ -8,17 +14,14 @@ help:
 	@echo "  coverage-travis-ci  Run test coverage specific to travis ci"
 
 deps:
-	GO111MODULE=on go get -v ./...
-	GO111MODULE=on go get -v github.com/stretchr/testify/assert@v1.2.2
-	GO111MODULE=on go get -v github.com/stretchr/testify/mock@v1.2.2
-	GO111MODULE=on go get -v github.com/jarcoal/httpmock@v1.0.4
-	GO111MODULE=on go get -v github.com/mattn/goveralls@v0.0.4
+	GO111MODULE=on $(GOBIN) get -t -v ./...
+	GO111MODULE=on $(GOBIN) get -v github.com/mattn/goveralls@v0.0.4
 
 test:
-	go test -v ./twitch
+	$(GOBIN) test -count=1 -v ./twitch
 
 coverage:
-	go test -cover ./twitch
+	$(GOBIN) test -count=1 -cover ./twitch
 
 coverage-travis-ci:
 	$(GOPATH)/bin/goveralls -service=travis-ci
