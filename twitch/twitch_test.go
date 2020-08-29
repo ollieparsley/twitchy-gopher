@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -173,8 +174,8 @@ func TestPerformRequestClientError(t *testing.T) {
 	if errorOutput.Error != "Twitchy error" {
 		t.Errorf("performRequestClientError error status was \"Twitchy error\": %s", errorOutput.Error)
 	}
-	if errorOutput.Message != "Get \"\": http: nil Request.URL" {
-		t.Errorf("performRequestClientError error message was \"http: nil Request.URL\": %s", errorOutput.Message)
+	if strings.Contains(errorOutput.Message, "http: nil Request.URL") == false {
+		t.Errorf("performRequestClientError error message didn't contain \"http: nil Request.URL\": %s", errorOutput.Message)
 	}
 }
 
