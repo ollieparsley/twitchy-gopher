@@ -8,7 +8,7 @@ help:
 	@echo "  coverage-travis-ci  Run test coverage specific to travis ci"
 
 deps:
-	export GO111MODULE=1
+	export GO111MODULE=on
 	go get -v ./...
 	go get -v github.com/stretchr/testify/assert@v1.2.2
 	go get -v github.com/stretchr/testify/mock@v1.2.2
