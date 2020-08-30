@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 //OAuthConfig contains all the oauth 2 config
@@ -24,6 +25,132 @@ type Client struct {
 	uploadVersion int
 	httpClient    *http.Client
 	oauthConfig   *OAuthConfig
+}
+
+// ErrorOutput - Twitch Error
+type ErrorOutput struct {
+	Error   string `json:"error"`
+	Status  int64  `json:"status"`
+	Message string `json:"message"`
+}
+
+//User the user secton within a block
+type User struct {
+	ID          int64     `json:"_id"`
+	Name        string    `json:"name"`
+	DisplayName string    `json:"display_name"`
+	Type        string    `json:"type"`
+	Bio         string    `json:"bio"`
+	Logo        string    `json:"logo"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+//Subscription the details of a subscription and the related user
+type Subscription struct {
+	ID          string    `json:"_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	SubPlan     string    `json:"sub_plan"`
+	SubPlanName string    `json:"sub_plan_name"`
+	User        User      `json:"user"`
+}
+
+//Channel details of a channel
+type Channel struct {
+	ID                           string    `json:"_id"`
+	Name                         string    `json:"name"`
+	DisplayName                  string    `json:"display_name"`
+	Mature                       bool      `json:"mature"`
+	Status                       string    `json:"status"`
+	BroadcasterLanguage          string    `json:"broadcaster_language"`
+	Game                         string    `json:"game"`
+	Language                     string    `json:"language"`
+	CreatedAt                    time.Time `json:"created_at,omitempty"`
+	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+	Logo                         string    `json:"logo"`
+	VideoBanner                  string    `json:"video_banner"`
+	ProfileBanner                string    `json:"profile_banner"`
+	ProfileBannerBackgroundColor string    `json:"profile_banner_background_color"`
+	Partner                      bool      `json:"partner"`
+	URL                          string    `json:"url"`
+	Views                        int64     `json:"views"`
+	Followers                    int64     `json:"followers"`
+	BroadcasterTyoe              string    `json:"broadcaster_type"`
+	StreamKey                    string    `json:"stream_key"`
+	Email                        string    `json:"email"`
+}
+
+//Team the user secton within a block
+type Team struct {
+	ID          int64     `json:"_id"`
+	Name        string    `json:"name"`
+	DisplayName string    `json:"display_name"`
+	Banner      string    `json:"banner"`
+	Background  string    `json:"background"`
+	Info        string    `json:"Info"`
+	Logo        string    `json:"logo"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+//Preview details of the different preview image sizes
+type Preview struct {
+	Small    string `json:"small"`
+	Medium   string `json:"medium"`
+	Large    string `json:"large"`
+	Template string `json:"template"`
+}
+
+//Thumbnails details of the different thumbnail sizes
+type Thumbnails struct {
+	Small    []interface{} `json:"small"`
+	Medium   []interface{} `json:"medium"`
+	Large    []interface{} `json:"large"`
+	Template []interface{} `json:"template"`
+}
+
+//Resolutions details of the different resolutions
+type Resolutions struct {
+	Chunked string `json:"chunked"`
+	High    string `json:"high"`
+	Low     string `json:"low"`
+	Medium  string `json:"medium"`
+	Mobile  string `json:"mobile"`
+}
+
+//FPS details of the different frames per second
+type FPS struct {
+	Chunked float64 `json:"chunked"`
+	High    float64 `json:"high"`
+	Low     float64 `json:"low"`
+	Medium  float64 `json:"medium"`
+	Mobile  float64 `json:"mobile"`
+}
+
+//Video details of a video
+type Video struct {
+	ID            string      `json:"_id"`
+	Title         string      `json:"title"`
+	Description   string      `json:"description"`
+	BroadcastID   int         `json:"broadcast_id"`
+	BroadcastType string      `json:"broadcast_type"`
+	Status        string      `json:"status"`
+	TagList       string      `json:"tag_list"`
+	Views         int64       `json:"views"`
+	URL           string      `json:"url"`
+	Language      string      `json:"language"`
+	Viewable      string      `json:"viewable"`
+	ViewableAt    *time.Time  `json:"viewable_at,omitempty"`
+	RecordedAt    *time.Time  `json:"recorded_at,omitempty"`
+	CreatedAt     *time.Time  `json:"created_at,omitempty"`
+	Game          string      `json:"game"`
+	Length        int64       `json:"length"`
+	Preview       Preview     `json:"preview"`
+	Thumbnails    Thumbnails  `json:"thumbnails"`
+	Paywalled     bool        `json:"paywalled"`
+	FPS           FPS         `json:"fps"`
+	Resolutions   Resolutions `json:"resolutions"`
+	Channel       Channel     `json:"channel"`
 }
 
 //NewClient a nice way of creating a new Client

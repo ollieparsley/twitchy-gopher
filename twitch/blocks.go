@@ -3,7 +3,42 @@ package twitch
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
+
+//ListBlocksInput the input used with the Blocks endpoint
+type ListBlocksInput struct {
+	UserID int64 // The user ID for user whos block list you want to return
+	Limit  int   // Maximum number of objects in array. Default is 25. Maximum is 100.
+	Offset int   // Object offset for pagination. Default is 0.
+}
+
+//ListBlocksOutput the array of blocks
+type ListBlocksOutput struct {
+	Blocks []BlockUserOutput
+}
+
+//BlockUserInput the inputs used with the block user endpoint
+type BlockUserInput struct {
+	UserID       int64
+	TargetUserID int64
+}
+
+//BlockUserOutput a single block
+type BlockUserOutput struct {
+	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64     `json:"_id"`
+	User      User      `json:"user"`
+}
+
+//UnblockUserInput the inputs used when deleting a block
+type UnblockUserInput struct {
+	UserID       int64
+	TargetUserID int64
+}
+
+//UnblockUserOutput currently the output is empty
+type UnblockUserOutput struct{}
 
 // ListBlocks - return a list of users from a users' block list
 func (c *Client) ListBlocks(input *ListBlocksInput) (*ListBlocksOutput, *ErrorOutput) {
